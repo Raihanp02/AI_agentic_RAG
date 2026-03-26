@@ -1,0 +1,8 @@
+docling
+alembic
+sqlalchemy
+psycopg2-binary
+pgvector
+pydantic
+pydantic-settings
+fastapi
