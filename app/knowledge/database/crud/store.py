@@ -13,7 +13,7 @@ def store_embedding(session, document_id, content, embedding, chunk_index, extra
     session.commit()
     return chunk.id
 
-def store_metadata(session, document_id, title, source_url):
+def store_document(session, document_id, title, source_url):
     document = Document(
         id=document_id,
         title=title,
