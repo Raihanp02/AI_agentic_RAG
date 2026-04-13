@@ -2,7 +2,7 @@ from typing_extensions import Literal
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import SystemMessage, HumanMessage, RemoveMessage
 
-from langgraph.graph import END
+from langgraph.graph import START, END
 from langgraph.graph import MessagesState, StateGraph
 from langgraph.prebuilt import ToolNode
 
@@ -11,17 +11,22 @@ class States(MessagesState):
     summary: str
 
 class AgenticRAGGraph:
-    def __init__(self, llm: ChatOpenAI, tools: list, states = States()):
-        self.llm = llm
+    def __init__(self, llm_method, tools: list, states = States):
+        self.llm_method = llm_method
         self.tools = tools
         self.state = states
+    
+        self.nodes = self.Nodes(self)
+        self.graph = self.nodes.build_graph(parent=self)
 
-        self.graph = self.Nodes().build_graph()
+    def draw_graph(self):
+        print(self.graph.get_graph().draw_mermaid())
+        self.graph.get_graph().draw_png("graph.png")
 
     class Nodes:
-        def __init__(self):
-            self.llm = AgenticRAGGraph.llm
-            self.graph = StateGraph(AgenticRAGGraph.state)
+        def __init__(self, parent):
+            self.llm = parent.llm_method.llm.bind_tools(parent.tools)
+            self.graph = StateGraph(parent.state)
 
         def assistant(self, state: MessagesState):
             summary = state.get("summary", "")
@@ -56,20 +61,33 @@ class AgenticRAGGraph:
 
             if last_message.tool_calls:
                 return "tools"
-            else: 
-                if len(state.get("messages", [])) > 6:
-                    return "summarize"
-                else:
-                    return END
+            if len(state.get("messages", [])) > 6:
+                return "summarize"
+            else:
+                return END
                 
-        def build_graph(self):
-            self.graph.add_node("assistant", self.assistant)
-            self.graph.add_node("summarize", self.summarize)
-            self.graph.add_node("tools", ToolNode(AgenticRAGGraph.tools))
+        def build_graph(self, parent):
+            self._add_node(parent)
+            self._add_edges()
 
-            self.graph.add_edge("assistant", "conditional_edge")
-            self.graph.add_edge("summarize", END)
-            self.graph.add_edge("tools", "assistant")
             graph = self.graph.compile()
             return graph
+        
+        def _add_node(self, parent):
+            self.graph.add_node("assistant", self.assistant)
+            self.graph.add_node("summarize", self.summarize)
+            self.graph.add_node("tools", ToolNode(parent.tools))
+
+        def _add_edges(self):
+            self.graph.add_edge(START, "assistant")
+            self.graph.add_conditional_edges(
+                "assistant", 
+                self.conditional_edge, 
+                {
+                    "tools": "tools",
+                    "summarize": "summarize",
+                    END: END,
+                })
+            self.graph.add_edge("summarize", END)
+            self.graph.add_edge("tools", "assistant")
 
