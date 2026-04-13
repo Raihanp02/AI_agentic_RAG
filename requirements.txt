@@ -6,3 +6,7 @@ pgvector
 pydantic
 pydantic-settings
 fastapi
+langchain
+langchain-openai
+openai
+langgraph
