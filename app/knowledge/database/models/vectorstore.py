@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, ForeignKey, Text
 from sqlalchemy.dialects.postgresql import JSONB
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, Mapped
 from pgvector.sqlalchemy import Vector
 from ..base import Base
 
@@ -14,4 +14,7 @@ class Chunk(Base):
     chunk_index = Column(Integer)
     extra_data = Column(JSONB)
 
-    document = relationship("Document", back_populates="chunks")
+    document: Mapped["Document"] = relationship(
+        "Document", 
+        back_populates="chunks"
+    )
