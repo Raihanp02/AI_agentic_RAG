@@ -1,5 +1,5 @@
-from ..models.vectorstore import Chunk
-from ..models.relational import Document
+from ...database.models.vectorstore import Chunk
+from ...database.models.relational import Document
 
 def store_embedding(session, document_id, content, embedding, chunk_index, extra_data=None):
     chunk = Chunk(

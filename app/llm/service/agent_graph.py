@@ -1,11 +1,12 @@
 from typing_extensions import Literal
-from langchain_openai import ChatOpenAI
 from langchain_core.messages import SystemMessage, HumanMessage, RemoveMessage
 
 from langgraph.graph import START, END
 from langgraph.graph import MessagesState, StateGraph
 from langgraph.prebuilt import ToolNode
 
+from app.llm.service.agent_tools.rag_tools import rag_tools
+from app.llm.service.llm import OpenRouterLLM
 
 class States(MessagesState):
     summary: str
@@ -28,7 +29,7 @@ class AgenticRAGGraph:
             self.llm = parent.llm_method.llm.bind_tools(parent.tools)
             self.graph = StateGraph(parent.state)
 
-        def assistant(self, state: MessagesState):
+        def assistant(self, state: States):
             summary = state.get("summary", "")
 
             if summary:
@@ -41,7 +42,7 @@ class AgenticRAGGraph:
 
             return {"messages": response}
         
-        def summarize(self, state: MessagesState):
+        def summarize(self, state: States):
             summary = state.get("summary", "")
 
             if summary:
@@ -56,7 +57,7 @@ class AgenticRAGGraph:
             return {"summary": response.content, "messages": [RemoveMessage(id=m.id) for m in state["messages"][:-2]]}
         
         # conditional edge
-        def conditional_edge(self, state: MessagesState):
+        def conditional_edge(self, state: States):
             last_message = state["messages"][-1]
 
             if last_message.tool_calls:
@@ -91,3 +92,4 @@ class AgenticRAGGraph:
             self.graph.add_edge("summarize", END)
             self.graph.add_edge("tools", "assistant")
 
+chat_graph = AgenticRAGGraph(llm_method=OpenRouterLLM(), tools=[rag_tools])

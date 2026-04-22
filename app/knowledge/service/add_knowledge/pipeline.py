@@ -1,7 +1,7 @@
 from .chunk_embedder import HuggingFaceTextEmbedder
 from .doc_chunker import DoclingHybridChunker
 from .doc_parser import DoclingParser
-from .database.crud.store import store_embedding, store_document
+from ..crud_knowledge.store import store_embedding, store_document
 
 from fastapi import UploadFile
 from pathlib import Path
@@ -21,7 +21,7 @@ class KnowledgePipeline:
         title = self.doc_parser.extract_title(markdown_content, filename)
 
         # Store document metadata in the database
-        source_url = self.save_document_locally(document)
+        source_url = self._save_document_locally(document)
         document_id = store_document(session, title=title, content = markdown_content, source_url=source_url.relative_to(self.BASE_DIR).as_posix())
 
         # Step 2: Chunk the parsed content
