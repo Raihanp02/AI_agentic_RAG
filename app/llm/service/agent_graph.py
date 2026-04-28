@@ -4,9 +4,12 @@ from langchain_core.messages import SystemMessage, HumanMessage, RemoveMessage
 from langgraph.graph import START, END
 from langgraph.graph import MessagesState, StateGraph
 from langgraph.prebuilt import ToolNode
+from langgraph.checkpoint.postgres import PostgresSaver
+
 
 from app.llm.service.agent_tools.rag_tools import rag_tools
 from app.llm.service.llm import OpenRouterLLM
+from core.config import settings
 
 class States(MessagesState):
     summary: str
@@ -28,6 +31,10 @@ class AgenticRAGGraph:
         def __init__(self, parent):
             self.llm = parent.llm_method.llm.bind_tools(parent.tools)
             self.graph = StateGraph(parent.state)
+
+            db_uri = f"{settings.DATABASE_URL}?options=-csearch_path=langgraph"
+            self.checkpointer = PostgresSaver.from_conn_string(db_uri)
+            self.checkpointer.setup()
 
         def assistant(self, state: States):
             summary = state.get("summary", "")
@@ -71,7 +78,7 @@ class AgenticRAGGraph:
             self._add_node(parent)
             self._add_edges()
 
-            graph = self.graph.compile()
+            graph = self.graph.compile(checkpointer=self.checkpointer)
             return graph
         
         def _add_node(self, parent):
