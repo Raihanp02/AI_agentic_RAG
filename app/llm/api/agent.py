@@ -7,8 +7,9 @@ router = APIRouter()
 
 @router.post("/chat")
 async def chat(req: AgentRequest):
-    result = chat_graph.graph.invoke({
-        "message": req.message
-    })
+    result = chat_graph.graph.invoke(
+        {"message": req.message},
+        {"configurable": {"thread_id": "1"}}
+    )
 
     return result
