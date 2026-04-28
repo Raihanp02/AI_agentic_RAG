@@ -11,7 +11,9 @@ def store_embedding(session, document_id, content, embedding, chunk_index, extra
     )
     session.add(chunk)
     session.commit()
-    return chunk.id
+    session.refresh(chunk)
+
+    return chunk
 
 def store_document(session, document_id, title, source_url):
     document = Document(
@@ -21,4 +23,6 @@ def store_document(session, document_id, title, source_url):
     )
     session.add(document)
     session.commit()
-    return document.id
+    session.refresh(document)
+
+    return document

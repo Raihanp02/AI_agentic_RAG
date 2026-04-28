@@ -17,12 +17,12 @@ class KnowledgePipeline:
         filename = self._extract_filename(document)
         # Step 1: Parse the document
         parsed_content = self.doc_parser.parse(document)
-        markdown_content = self.doc_parser(parsed_content)
+        markdown_content = self.doc_parser.extract_markdown(parsed_content)
         title = self.doc_parser.extract_title(markdown_content, filename)
 
         # Store document metadata in the database
         source_url = self._save_document_locally(document)
-        document_id = store_document(session, title=title, content = markdown_content, source_url=source_url.relative_to(self.BASE_DIR).as_posix())
+        document_result = store_document(session, title=title, content = markdown_content, source_url=source_url.relative_to(self.BASE_DIR).as_posix())
 
         # Step 2: Chunk the parsed content
         chunks = self.chunker.chunk(parsed_content)
@@ -32,9 +32,15 @@ class KnowledgePipeline:
             embedded_chunk = self.chunk_embedder.embed(chunk)
 
             # Step 4: Store the embedded chunks in the database
-            store_embedding(session, document_id=document_id, content=chunk, embedding=embedded_chunk, chunk_index=i)
+            store_embedding(session, document_id=document_result.id, content=chunk, embedding=embedded_chunk, chunk_index=i)
 
-        return chunks
+        return {
+            "message": "Document processed and stored successfully",
+            "document_id": document_result.id,
+            "title": title,
+            "source_url": source_url.relative_to(self.BASE_DIR).as_posix(),
+            "num_chunks": len(chunks)
+        }
     
     def _extract_filename(self, file):
         if isinstance(file, UploadFile):
