@@ -15,11 +15,12 @@ def store_embedding(session, document_id, content, embedding, chunk_index, extra
 
     return chunk
 
-def store_document(session, document_id, title, source_url):
+def store_document(session, document_id, title, source_url, category=None):
     document = Document(
         id=document_id,
         title=title,
-        source_url=source_url
+        source_url=source_url,
+        category=category
     )
     session.add(document)
     session.commit()
