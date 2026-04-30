@@ -4,8 +4,6 @@ from langchain_core.messages import SystemMessage, HumanMessage, RemoveMessage
 from langgraph.graph import START, END
 from langgraph.graph import MessagesState, StateGraph
 from langgraph.prebuilt import ToolNode
-from langgraph.checkpoint.postgres import PostgresSaver
-
 
 from app.llm.service.agent_tools.rag_tools import rag_tools
 from app.llm.service.llm import OpenRouterLLM
@@ -32,11 +30,7 @@ class AgenticRAGGraph:
             self.llm = parent.llm_method.llm.bind_tools(parent.tools)
             self.graph = StateGraph(parent.state)
 
-            db_uri = f"{settings.DATABASE_URL}?options=-csearch_path=langgraph"
-            self.checkpointer = PostgresSaver.from_conn_string(db_uri)
-            self.checkpointer.setup()
-
-        def assistant(self, state: States):
+        async def assistant(self, state: States):
             summary = state.get("summary", "")
 
             if summary:
@@ -45,11 +39,11 @@ class AgenticRAGGraph:
             else:
                 message = state.get("messages")
 
-            response = self.llm.invoke(message)
+            response = await self.llm.ainvoke(message)
 
-            return {"messages": response}
+            return {"messages": [response]}
         
-        def summarize(self, state: States):
+        async def summarize(self, state: States):
             summary = state.get("summary", "")
 
             if summary:
@@ -59,7 +53,7 @@ class AgenticRAGGraph:
 
             message = state.get("messages") + [HumanMessage(content=summary_message)]
 
-            response = self.llm.invoke(message)
+            response = await self.llm.ainvoke(message)
 
             return {"summary": response.content, "messages": [RemoveMessage(id=m.id) for m in state["messages"][:-2]]}
         
@@ -78,7 +72,7 @@ class AgenticRAGGraph:
             self._add_node(parent)
             self._add_edges()
 
-            graph = self.graph.compile(checkpointer=self.checkpointer)
+            graph = self.graph.compile()
             return graph
         
         def _add_node(self, parent):

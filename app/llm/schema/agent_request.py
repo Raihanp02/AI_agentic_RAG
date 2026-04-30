@@ -1,4 +1,4 @@
 from pydantic import BaseModel
 
 class AgentRequest(BaseModel):
-    message: str
+    messages: str
