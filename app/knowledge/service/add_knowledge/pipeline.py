@@ -13,7 +13,7 @@ class KnowledgePipeline:
         self.chunker = chunker
         self.chunk_embedder = chunk_embedder
 
-    def process_document(self, session, document):
+    def process_document(self, session, document, category=None):
         filename = self._extract_filename(document)
         # Step 1: Parse the document
         parsed_content = self.doc_parser.parse(document)
@@ -22,7 +22,7 @@ class KnowledgePipeline:
 
         # Store document metadata in the database
         source_url = self._save_document_locally(document)
-        document_result = store_document(session, title=title, content = markdown_content, source_url=source_url.relative_to(self.BASE_DIR).as_posix())
+        document_result = store_document(session, title=title, source_url=source_url.relative_to(self.BASE_DIR).as_posix(), category=category)
 
         # Step 2: Chunk the parsed content
         chunks = self.chunker.chunk(parsed_content)
