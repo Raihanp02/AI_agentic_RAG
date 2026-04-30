@@ -1,25 +1,31 @@
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from sqlalchemy.orm import sessionmaker
-from contextlib import contextmanager
+from contextlib import asynccontextmanager
 from core.config import settings
 
-DATABASE_URL = settings.DATABASE_URL
+engine = create_async_engine(settings.DATABASE_ASYNC_URL, echo=True)
 
-engine = create_async_engine(DATABASE_URL, echo=True)
-
-SessionLocal = sessionmaker(
+SessionLocal = async_sessionmaker(
     bind=engine,
     class_=AsyncSession,
     expire_on_commit=False
 )
 
-@contextmanager
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    except Exception:
-        db.rollback()
-        raise
-    finally:
-        db.close()
+async def get_db_fastapi():
+    async with SessionLocal() as db:
+        try:
+            yield db
+            await db.commit()
+        except Exception:
+            await db.rollback()
+            raise
+
+@asynccontextmanager
+async def get_db():
+    async with SessionLocal() as db:
+        try:
+            yield db
+            await db.commit()
+        except Exception:
+            await db.rollback()
+            raise

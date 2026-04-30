@@ -12,3 +12,5 @@ openai
 langgraph
 uvicorn
 langgraph-checkpoint-postgres
+python-multipart
+asyncpg

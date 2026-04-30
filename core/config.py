@@ -2,7 +2,8 @@ from pydantic_settings import BaseSettings
 from functools import lru_cache
 
 class Settings(BaseSettings):
-    DATABASE_URL: str
+    DATABASE_ASYNC_URL: str
+    DATABASE_SYNC_URL: str
     OPENROUTER_API_KEY: str
     OPENROUTER_BASE_URL: str
     OPENROUTER_MODEL: str

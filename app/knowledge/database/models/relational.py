@@ -11,10 +11,9 @@ class Document(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     title = Column(Text)
-    category = Column(Text)
-    content = Column(Text)
+    category = Column(Text, nullable=True)
     source_url = Column(Text)
-    extra_data = Column(JSONB)
+    extra_data = Column(JSONB, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
