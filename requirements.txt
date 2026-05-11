@@ -3,9 +3,9 @@ alembic
 sqlalchemy
 psycopg2-binary
 pgvector
-pydantic
+pydantic==2.13.3
 pydantic-settings
-fastapi
+fastapi==0.115.12
 langchain
 langchain-openai
 openai
@@ -14,3 +14,4 @@ uvicorn
 langgraph-checkpoint-postgres
 python-multipart
 asyncpg
+starlette==0.46.2

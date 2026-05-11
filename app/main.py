@@ -3,11 +3,11 @@ from contextlib import asynccontextmanager
 from asyncpg import Connection as AsyncConnection
 from psycopg_pool import AsyncConnectionPool
 import psycopg
+from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
 
 from app.llm.routers import api_router as llm_router
 from app.knowledge.routers import api_router as knowledge_router
 from core.config import settings
-from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
 from app.llm.service.agent_graph import chat_graph
 
 @asynccontextmanager

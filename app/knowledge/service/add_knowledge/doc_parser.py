@@ -8,11 +8,11 @@ class DoclingParser:
     def __init__(self):
         self.converter = DocumentConverter()
 
-    async def parse(self, source):
+    def parse(self, source, filename):
         try:
-            temp_file_path = Path(f"./temp_{source.filename}")
+            temp_file_path = Path(f"./temp_{filename}")
             with open(temp_file_path, "wb") as f:
-                f.write(await source.read())
+                f.write(source)
 
             doc = self.converter.convert(str(temp_file_path)).document
             temp_file_path.unlink()
