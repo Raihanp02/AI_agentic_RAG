@@ -36,6 +36,6 @@ async def rag_tools(query: str, category: str = None):
     - The user asks about specific entities, records, or past information
     """
     async with get_db() as db:
-        result = ragtools.retrieve(db, query, category)
+        result = await ragtools.retrieve(db, query, category)
 
     return result

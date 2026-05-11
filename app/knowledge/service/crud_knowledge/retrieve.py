@@ -3,7 +3,7 @@ import numpy as np
 from app.knowledge.database.models.vectorstore import Chunk
 from app.knowledge.database.models.relational import Document
 
-def get_document_from_embedding(session, embedding: list[float] | np.ndarray, top_k: int = 1, category: str = None):
+async def get_document_from_embedding(session, embedding: list[float] | np.ndarray, top_k: int = 1, category: str = None):
     if isinstance(embedding, np.ndarray):
         embedding = embedding.astype(float).tolist()
 
@@ -24,6 +24,6 @@ def get_document_from_embedding(session, embedding: list[float] | np.ndarray, to
         .limit(top_k)
     )
 
-    results = session.execute(stmt).scalars().all()
+    results = await session.execute(stmt).scalars().all()
 
     return results
