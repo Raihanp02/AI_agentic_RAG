@@ -12,11 +12,18 @@ class RAGTools:
 
     async def retrieve(self, session, query: str, category: str = None):
         embedding = self.text_embedder.embed(query)
-        retrieved = await get_document_from_embedding(session, embedding, category)
+        retrieved = await get_document_from_embedding(session, embedding, top_k=1, category=category)
 
         return {
             "message": "Use this retrieved document below as reference, if not relevant dont use it",
-            "documents": retrieved
+            "documents": [
+                    {
+                        "content": chunk.content,
+                        "document_id": chunk.document_id,
+                        "chunk_index": chunk.chunk_index,
+                    }
+                    for chunk in retrieved
+                ]
         }
 
 ragtools = RAGTools()

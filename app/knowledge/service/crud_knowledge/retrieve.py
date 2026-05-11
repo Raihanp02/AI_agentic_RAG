@@ -13,17 +13,18 @@ async def get_document_from_embedding(session, embedding: list[float] | np.ndarr
         stmt = (
             stmt
             .join(Chunk.document)
-            .where(Document.cagegory == category)
+            .where(Document.category == category)
         )
     
     similarity_expr = 1 - Chunk.embedding.cosine_distance(embedding)
 
     stmt = (
         stmt
-        .order_by(similarity_expr)
+        .order_by(similarity_expr.desc())
         .limit(top_k)
     )
 
-    results = await session.execute(stmt).scalars().all()
+    results = await session.execute(stmt)
+    results = results.scalars().all()
 
     return results
