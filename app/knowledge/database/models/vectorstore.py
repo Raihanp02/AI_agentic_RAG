@@ -10,7 +10,7 @@ class Chunk(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     document_id = Column(Integer, ForeignKey("documents.id"), nullable=False)
     content = Column(Text)
-    embedding = Column(Vector(512)) 
+    embedding = Column(Vector(1024)) 
     chunk_index = Column(Integer)
     extra_data = Column(JSONB)
 
