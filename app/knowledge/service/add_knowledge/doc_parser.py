@@ -1,18 +1,28 @@
 from docling.document_converter import DocumentConverter
 import os 
 from fastapi import UploadFile
+from pathlib import Path
+from fastapi import HTTPException
 
 class DoclingParser:
     def __init__(self):
         self.converter = DocumentConverter()
 
-    def parse(self, source):
-        if isinstance(source, UploadFile):
-            source = source.file
-        source = str(source)
+    def parse(self, source, filename):
+        try:
+            temp_file_path = Path(f"./temp_{filename}")
+            with open(temp_file_path, "wb") as f:
+                f.write(source)
 
-        doc = self.converter.convert(source).document
-        return doc
+            doc = self.converter.convert(str(temp_file_path)).document
+            temp_file_path.unlink()
+
+            return doc
+
+        except Exception as e:
+            if temp_file_path.exists():
+                temp_file_path.unlink()
+            raise HTTPException(status_code=500, detail=f"An error occurred during conversion: {str(e)}")
     
     def extract_title(self, content, filename):
         """Extract title from document content or filename."""
