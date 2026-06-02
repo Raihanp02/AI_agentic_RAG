@@ -15,3 +15,4 @@ langgraph-checkpoint-postgres
 python-multipart
 asyncpg
 starlette==0.46.2
+langchain-community

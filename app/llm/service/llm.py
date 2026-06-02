@@ -2,6 +2,13 @@ from langchain_openai import ChatOpenAI
 from core.config import settings
 
 class LangchainLLM:
+    _instance = None
+
+    def __new__(cls, *args, **kwargs):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+    
     def __init__(self, model_name="gpt-4o-mini", temperature=0.7):
         self.llm = ChatOpenAI(
             model=model_name,
@@ -12,6 +19,13 @@ class LangchainLLM:
         return self.llm.invoke(prompt)
         
 class OpenRouterLLM:
+    _instance = None
+
+    def __new__(cls, *args, **kwargs):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+    
     def __init__(
             self, 
             model_name=settings.OPENROUTER_MODEL, 

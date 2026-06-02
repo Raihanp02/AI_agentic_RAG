@@ -3,6 +3,13 @@ from langchain_openai import OpenAIEmbeddings
 import torch
 
 class HuggingFaceTextEmbedder:
+    _instance = None
+
+    def __new__(cls, *args, **kwargs):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+    
     def __init__(self, model_name: str = "BAAI/bge-m3"):
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
         self.model = AutoModel.from_pretrained(model_name)
@@ -17,5 +24,12 @@ class HuggingFaceTextEmbedder:
         return embeddings.numpy()
     
 class LangChainOpenAI:
+    _instance = None
+
+    def __new__(cls, *args, **kwargs):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+
     def __init__(self, model_name: str):
         self.model = OpenAIEmbeddings()
