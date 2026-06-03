@@ -1,6 +1,6 @@
 from app.knowledge.service.add_knowledge.chunk_embedder import HuggingFaceTextEmbedder
 from app.knowledge.service.crud_knowledge.retrieve import get_document_from_embedding
-from app.knowledge.database.session import get_db
+from core.database.session import get_db
 
 from typing import Optional
 from pydantic import BaseModel, Field

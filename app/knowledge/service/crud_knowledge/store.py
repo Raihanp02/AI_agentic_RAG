@@ -1,5 +1,5 @@
-from ...database.models.vectorstore import Chunk
-from ...database.models.relational import Document
+from ...models.vectorstore import Chunk
+from ...models.relational import Document
 
 # ✅ Async versions — for FastAPI routes
 async def store_document(session, title, source_url, category=None):

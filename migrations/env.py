@@ -5,8 +5,8 @@ from sqlalchemy import pool
 
 from alembic import context
 
-from app.knowledge.database.base import Base
-from app.knowledge.database.models import *
+from core.database.base import Base
+from app.knowledge.models import *
 from core.config import settings
 
 # this is the Alembic Config object, which provides

@@ -4,7 +4,7 @@ from sqlalchemy.orm import relationship, Mapped
 from datetime import datetime
 from pgvector.sqlalchemy import Vector
 
-from ..base import Base
+from core.database.base import Base
 
 class Document(Base):
     __tablename__ = "documents"

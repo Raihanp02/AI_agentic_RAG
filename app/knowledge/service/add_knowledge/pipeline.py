@@ -3,7 +3,7 @@ from .doc_chunker import DoclingHybridChunker
 from .doc_parser import DoclingParser
 from ..crud_knowledge.store import store_embedding_sync, store_document_sync
 from ..progress_service import update_progress
-from app.knowledge.database.session import get_sync_db
+from core.database.session import get_sync_db
 
 from fastapi import UploadFile
 from pathlib import Path
@@ -72,7 +72,7 @@ class KnowledgePipeline:
         else:
             return Path(file).name
         
-    def _save_document_locally(self, document, filename=None, save_dir=BASE_DIR / "app" / "knowledge" / "database" / "upload"):
+    def _save_document_locally(self, document, filename=None, save_dir=BASE_DIR / "core" / "database" / "upload"):
         save_dir.mkdir(parents=False, exist_ok=True)
 
         filename = filename or self._extract_filename(document)

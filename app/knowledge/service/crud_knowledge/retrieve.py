@@ -1,7 +1,7 @@
 from sqlalchemy import select
 import numpy as np
-from app.knowledge.database.models.vectorstore import Chunk
-from app.knowledge.database.models.relational import Document
+from app.knowledge.models.vectorstore import Chunk
+from app.knowledge.models.relational import Document
 
 async def get_document_from_embedding(session, embedding: list[float] | np.ndarray, top_k: int = 1, category: str = None):
     if isinstance(embedding, np.ndarray):

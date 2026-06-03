@@ -7,7 +7,7 @@ from typing import List
 
 from app.knowledge.service.add_knowledge.pipeline import KnowledgePipeline
 from app.knowledge.schema.knowledge_response import KnowledgeResponse
-from app.knowledge.database.session import get_db_fastapi
+from core.database.session import get_db_fastapi
 from core.state import progress_dict
 from app.knowledge.service.progress_service import update_progress
 

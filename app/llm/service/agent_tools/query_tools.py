@@ -1,4 +1,4 @@
-from app.knowledge.database.session import get_db
+from core.database.session import get_db
 from app.llm.service.llm import OpenRouterLLM
 from langchain_community.utilities import SQLDatabase
 from langchain_community.agent_toolkits import SQLDatabaseToolkit
