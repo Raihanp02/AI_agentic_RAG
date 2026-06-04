@@ -7,6 +7,8 @@ from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
 
 from app.llm.routers import api_router as llm_router
 from app.knowledge.routers import api_router as knowledge_router
+from app.user.routers import api_router as auth_router
+
 from core.config import settings
 from app.llm.service.agent_graph import chat_graph
 
@@ -27,3 +29,4 @@ app = FastAPI(lifespan=lifespan)
 
 app.include_router(llm_router, prefix="/api")
 app.include_router(knowledge_router, prefix="/api")
+app.include_router(auth_router, prefix="/api")

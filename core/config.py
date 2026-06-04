@@ -8,6 +8,10 @@ class Settings(BaseSettings):
     OPENROUTER_API_KEY: str
     OPENROUTER_BASE_URL: str
     OPENROUTER_MODEL: str
+    # Auth
+    SECRET_KEY: str
+    ALGORITHM: str
+    ACCESS_TOKEN_EXPIRE_MINUTES: int
     class Config:
         env_file = ".env" 
 

@@ -16,3 +16,5 @@ python-multipart
 asyncpg
 starlette==0.46.2
 langchain-community
+pyjwt
+pwdlib
