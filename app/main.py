@@ -21,6 +21,8 @@ async def lifespan(app: FastAPI):
         await AsyncPostgresSaver(conn).setup()
 
     async with AsyncConnectionPool(conninfo=db_uri, max_size=5) as pool:
+        app.state.pool = pool
+
         checkpointer = AsyncPostgresSaver(pool)
         chat_graph.graph.checkpointer = checkpointer
         yield

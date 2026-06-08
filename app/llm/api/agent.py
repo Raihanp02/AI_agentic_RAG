@@ -3,11 +3,13 @@ from langchain_core.messages import HumanMessage
 import traceback
 from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import Request
+from starlette import status
 
 from app.llm.service.agent_graph import chat_graph
 from app.llm.schema.agent_request import AgentRequest
 from app.llm.schema.conversation import ConversationDetail, MessageDetail, MessageResponse, MessageListResponse, validate_conversation_id
-from app.llm.service.message_manager import add_message, add_conversation, get_conversation, get_list_conversations
+from app.llm.service.message_manager import add_message, add_conversation, get_conversation, get_list_conversations, delete_conversation, delete_checkpoint
 from app.user.models.users import User
 from core.database.session import get_db_fastapi
 from app.user.services.auth import get_current_active_user
@@ -62,3 +64,8 @@ async def chat(req: AgentRequest, conversation_uuid: UUID = Depends(validate_con
             status_code=500,
             detail=str(e)
         )
+
+@router.delete("/conversation/{conversation_uuid}/messages", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_conversation_messages(conversation_uuid: UUID, request: Request, db: AsyncSession = Depends(get_db_fastapi),  current_user: User = Depends(get_current_active_user)):
+    await delete_conversation(db, conversation_uuid, current_user.id)
+    await delete_checkpoint(request.app.state.pool, conversation_uuid)
