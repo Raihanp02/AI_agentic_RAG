@@ -19,3 +19,4 @@ langchain-community
 python-jose
 bcrypt==4.0.1
 passlib[bcrypt]==1.7.4
+fastapi-filter

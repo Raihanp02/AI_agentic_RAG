@@ -28,3 +28,19 @@ async def get_document_from_embedding(session, embedding: list[float] | np.ndarr
     results = results.scalars().all()
 
     return results
+
+async def get_document_by_id(session, document_id: int):
+    stmt = select(Document).where(Document.id == document_id)
+    result = await session.execute(stmt).scalars().first()
+    return result
+
+async def delete_document_by_id(session, document_id: int):
+    stmt = select(Document).where(Document.id == document_id)
+    result = await session.execute(stmt)
+    document = result.scalars().first()
+
+    if not document:
+        return False
+
+    await session.delete(document)
+    await session.commit()
