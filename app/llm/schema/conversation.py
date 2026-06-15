@@ -54,4 +54,4 @@ async def validate_conversation_id(
             detail="Conversation not found"
         )
 
-    return conversation
+    return conversation_uuid

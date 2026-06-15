@@ -4,7 +4,7 @@ from langchain_community.utilities import SQLDatabase
 from langchain_community.agent_toolkits import SQLDatabaseToolkit
 from langchain_openai import ChatOpenAI
 from langchain.tools import tool
-from langchain.agents import create_react_agent
+from langchain.agents import create_agent
 
 from core.config import settings
 
@@ -14,7 +14,7 @@ class QueryTools:
         self.llm = llm
         self.toolkit = SQLDatabaseToolkit(db=self.db, llm=self.llm)
         self.tools = self.toolkit.get_tools()
-        self.sql_agent = create_react_agent(
+        self.sql_agent = create_agent(
             model=self.llm,
             tools=self.tools
         )

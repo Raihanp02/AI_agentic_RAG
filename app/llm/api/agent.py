@@ -52,6 +52,7 @@ async def chat(req: AgentRequest, conversation_uuid: UUID = Depends(validate_con
         role = result["messages"][-1].type
         content = result["messages"][-1].content
 
+        await add_message(db, conversation_uuid, "human", req.messages)
         await add_message(db, conversation_uuid, role, content)
 
         return {
