@@ -92,3 +92,5 @@ class KnowledgePipeline:
                     dst.write(chunk)
 
         return save_path
+    
+knowledge_pipeline = KnowledgePipeline()

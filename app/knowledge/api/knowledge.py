@@ -5,14 +5,13 @@ from concurrent.futures import ProcessPoolExecutor
 import uuid
 from typing import List
 
-from app.knowledge.service.add_knowledge.pipeline import KnowledgePipeline
+from app.knowledge.service.add_knowledge.pipeline import KnowledgePipeline, knowledge_pipeline
 from app.knowledge.schema.knowledge_response import KnowledgeResponse
 from core.database.session import get_db_fastapi
 from core.state import progress_dict
 from app.knowledge.service.progress_service import update_progress
 
 router = APIRouter()
-knowledge_pipeline = KnowledgePipeline()
 pool = ProcessPoolExecutor(max_workers=2)
 
 @router.post("/insert-knowledge")
