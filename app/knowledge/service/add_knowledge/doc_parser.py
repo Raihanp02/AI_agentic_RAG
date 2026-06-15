@@ -1,4 +1,8 @@
+from io import BytesIO
+
 from docling.document_converter import DocumentConverter
+from docling.datamodel.base_models import DocumentStream
+
 import os 
 from fastapi import UploadFile
 from pathlib import Path
@@ -10,14 +14,31 @@ class DoclingParser:
 
     def parse(self, source, filename):
         try:
-            temp_file_path = Path(f"./temp_{filename}")
-            with open(temp_file_path, "wb") as f:
-                f.write(source)
+            if isinstance(source, bytes):
 
-            doc = self.converter.convert(str(temp_file_path)).document
-            temp_file_path.unlink()
+                if not filename:
+                    raise ValueError(
+                        "filename required for bytes input"
+                    )
 
-            return doc
+                source = DocumentStream(
+                    name=filename,
+                    stream=BytesIO(source)
+                )
+
+                result = self.converter.convert(source)
+
+                return result.document
+            
+            else:      
+                temp_file_path = Path(f"./temp_{filename}")
+                with open(temp_file_path, "wb") as f:
+                    f.write(source)
+
+                doc = self.converter.convert(str(temp_file_path)).document
+                temp_file_path.unlink()
+
+                return doc
 
         except Exception as e:
             if temp_file_path.exists():
