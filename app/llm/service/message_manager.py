@@ -30,12 +30,22 @@ async def get_conversation(session, conversation_uuid, user_id=None) -> Conversa
     query = select(Conversation).where(Conversation.uuid == conversation_uuid)
     if user_id is not None:
         query = query.where(Conversation.user_id == user_id)
-
-    query = query.options(
-        selectinload(Conversation.messages)
-    )
         
     return (await session.execute(query)).scalars().first()
+
+async def get_latest_messages(session, conversation_uuid, limit=10, user_id=None):
+    conversation = get_conversation(session, conversation_uuid=conversation_uuid, user_id=user_id)
+
+    messages = await session.execute(
+        select(Message)
+        .where(Message.conversation_id == conversation.id)
+        .order_by(Message.created_at.desc())
+        .limit(limit)
+    )
+
+    messages = list(reversed(messages.scalars().all()))
+
+    return messages
 
 async def get_list_conversations(session, user_id) -> list[Conversation]:
     query = select(Conversation).where(Conversation.user_id == user_id)

@@ -11,6 +11,7 @@ from core.config import settings
 
 class States(MessagesState):
     summary: str
+    file_bytes: bytes
 
 class AgenticRAGGraph:
     def __init__(self, llm_method, tools: list, states = States):

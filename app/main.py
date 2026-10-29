@@ -10,7 +10,7 @@ from app.knowledge.routers import api_router as knowledge_router
 from app.user.routers import api_router as auth_router
 
 from core.config import settings
-from app.llm.service.agent_graph import chat_graph
+from app.llm.service.graph.agent_graph import chat_graph
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
