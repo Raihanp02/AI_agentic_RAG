@@ -1,7 +1,7 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from datetime import datetime
 from app.user.models.users import User
-from app.llm.models.conversations import Conversation
+from app.agent.models.conversations import Conversation
 from app.user.services.auth import get_current_active_user
 from core.database.session import get_db_fastapi
 

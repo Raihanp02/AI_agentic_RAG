@@ -2,8 +2,8 @@ from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 from psycopg_pool import AsyncConnectionPool
 
-from app.llm.models.conversations import Conversation
-from app.llm.models.messages import Message
+from app.agent.models.conversations import Conversation
+from app.agent.models.messages import Message
 
 async def add_conversation(session, user_id, title=None):
     conversation = Conversation(user_id=user_id, title=title)
@@ -34,7 +34,7 @@ async def get_conversation(session, conversation_uuid, user_id=None) -> Conversa
     return (await session.execute(query)).scalars().first()
 
 async def get_latest_messages(session, conversation_uuid, limit=10, user_id=None):
-    conversation = get_conversation(session, conversation_uuid=conversation_uuid, user_id=user_id)
+    conversation = await get_conversation(session, conversation_uuid=conversation_uuid, user_id=user_id)
 
     messages = await session.execute(
         select(Message)

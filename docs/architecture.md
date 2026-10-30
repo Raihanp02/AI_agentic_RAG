@@ -16,7 +16,7 @@ The app coordinates document upload, parsing, chunking, embedding, and storage i
 ### `app/main.py`
 - Entrypoint for the FastAPI app
 - Sets up database checkpointing for LangGraph
-- Mounts `app.llm.routers` and `app.knowledge.routers`
+- Mounts `app.agent.routers` and `app.knowledge.routers`
 
 ### `core/config.py`
 - Loads environment variables via `pydantic-settings`

@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from app.llm.api import agent
+from app.agent.api import agent
 
 api_router = APIRouter()
 

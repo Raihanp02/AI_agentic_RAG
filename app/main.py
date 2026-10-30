@@ -7,13 +7,13 @@ from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
 from psycopg.rows import dict_row
 
 
-from app.llm.routers import api_router as llm_router
+from app.agent.routers import api_router as llm_router
 from app.knowledge.routers import api_router as knowledge_router
 from app.user.routers import api_router as auth_router
 
-from app.llm.service.agent_tools.rag_tools import rag_tools
+from app.agent.service.agent_tools.rag_tools import rag_tools
 from core.config import settings
-from app.llm.service.graph.agent_graph import AgenticRAGGraph
+from app.agent.service.graph.agent_graph import AgenticRAGGraph
 from app.provider.factory import get_llm
 
 @asynccontextmanager

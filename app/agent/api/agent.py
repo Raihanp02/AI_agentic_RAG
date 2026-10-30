@@ -6,11 +6,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import Request
 from starlette import status
 
-from app.llm.service.graph.agent_graph import chat_graph
-from app.llm.schema.agent_request import AgentRequest
-from app.llm.schema.conversation import ConversationDetail, MessageDetail, MessageResponse, MessageListResponse, validate_conversation_id
-from app.llm.service.message_manager import add_message, add_conversation, get_conversation, get_list_conversations, delete_conversation, delete_checkpoint, get_latest_messages
+from app.agent.schema.agent_request import AgentRequest
+from app.agent.schema.conversation import ConversationDetail, MessageDetail, MessageResponse, MessageListResponse, validate_conversation_id
+from app.agent.service.message_manager import add_message, add_conversation, get_conversation, get_list_conversations, delete_conversation, delete_checkpoint, get_latest_messages
 from app.user.models.users import User
+from app.agent.dependencies import get_graph
 from core.database.session import get_db_fastapi
 from app.user.services.auth import get_current_active_user
 from sqlalchemy import select
@@ -42,12 +42,12 @@ async def get_conversation_messages(conversation_uuid: UUID, limit: int = 10, cu
     
     messages = await get_latest_messages(session=db, conversation_uuid=conversation_uuid, limit=limit, user_id=current_user.id)
 
-    return messages
+    return MessageListResponse(messages=messages)
 
 @router.post("/conversation/{conversation_uuid}/messages", response_model=MessageResponse)
-async def chat(req: AgentRequest, conversation_uuid: UUID = Depends(validate_conversation_id), current_user: User = Depends(get_current_active_user), db: AsyncSession = Depends(get_db_fastapi)):
+async def chat(req: AgentRequest, conversation_uuid: UUID = Depends(validate_conversation_id), current_user: User = Depends(get_current_active_user), db: AsyncSession = Depends(get_db_fastapi), graph = Depends(get_graph)):
     try:
-        result = await chat_graph.graph.ainvoke(
+        result = await graph.graph.ainvoke(
             {"messages": [HumanMessage(content=req.messages)]},
             {"configurable": {"thread_id": conversation_uuid}}
         )

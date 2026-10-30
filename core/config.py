@@ -19,7 +19,11 @@ class Settings(BaseSettings):
     SECRET_KEY: str
     ALGORITHM: str
     ACCESS_TOKEN_EXPIRE_MINUTES: int
-    QUERY_LLM_URL: Literal["openrouter", "anthropic", "openai"] = "openrouter"  # default value for QUERY_LLM_URL
+
+    # LLM
+    LLM_PROVIDER: Literal["openai", "openrouter"] = "openrouter"
+    QUERY_LLM_URL: Literal["openrouter", "openai"] = "openrouter"  # default value for QUERY_LLM_URL
+
 
 @lru_cache # Caches the settings object to ensure it's loaded only once
 def get_settings():

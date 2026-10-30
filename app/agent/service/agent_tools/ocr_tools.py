@@ -4,7 +4,7 @@ from langchain.tools import tool
 from langgraph.types import Command
 
 from app.knowledge.service.add_knowledge.pipeline import knowledge_pipeline
-from app.llm.service.prompt import ocr_prompt_template
+from app.agent.service.prompt import ocr_prompt_template
 
 @tool
 def extract_document(
