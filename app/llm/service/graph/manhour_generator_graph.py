@@ -3,7 +3,7 @@ from langgraph.graph import MessagesState, StateGraph
 from langgraph.prebuilt import ToolNode
 
 from app.llm.service.agent_tools.rag_tools import rag_tools
-from app.llm.service.llm import OpenRouterLLM
+from app.provider.llm import OpenRouterLLM
 from core.config import settings
 from typing import TypedDict, Optional, Literal
 from pydantic import BaseModel, Field
