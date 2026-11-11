@@ -4,7 +4,7 @@ from langchain.agents import create_agent
 from langchain.tools import tool
 from langchain_community.agent_toolkits import SQLDatabaseToolkit
 from langchain_community.utilities import SQLDatabase
-from app.provider.factory import get_llm
+from provider.llm.factory import get_llm
 
 from core.config import settings
 

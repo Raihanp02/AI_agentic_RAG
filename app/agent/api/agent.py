@@ -10,7 +10,7 @@ from app.agent.schema.agent_request import AgentRequest
 from app.agent.schema.conversation import ConversationDetail, MessageDetail, MessageResponse, MessageListResponse, validate_conversation_id
 from app.agent.service.message_manager import add_message, add_conversation, get_conversation, get_list_conversations, delete_conversation, delete_checkpoint, get_latest_messages
 from app.user.models.users import User
-from app.agent.dependencies import get_graph
+from app.dependencies import get_graph
 from core.database.session import get_db_fastapi
 from app.user.services.auth import get_current_active_user
 from sqlalchemy import select

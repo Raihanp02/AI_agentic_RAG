@@ -1,5 +1,5 @@
-from app.knowledge.service.add_knowledge.chunk_embedder import HuggingFaceTextEmbedder
-from app.knowledge.service.crud_knowledge.retrieve import get_document_from_embedding
+from provider.text_embedding.embedder import TextEmbedder, get_embedder
+from app.knowledge.repository.retrieve import get_document_from_embedding
 from core.database.session import get_db
 
 from typing import Optional
@@ -7,8 +7,8 @@ from pydantic import BaseModel, Field
 from langchain.tools import tool
 
 class RAGTools:
-    def __init__(self, text_embedder = HuggingFaceTextEmbedder()):
-        self.text_embedder = text_embedder
+    def __init__(self, text_embedder: TextEmbedder):
+        self.text_embedder = text_embedder if text_embedder else get_embedder()
 
     async def retrieve(self, session, query: str, category: str = None):
         embedding = self.text_embedder.embed(query)

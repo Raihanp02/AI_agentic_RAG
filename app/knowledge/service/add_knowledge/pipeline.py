@@ -1,96 +1,118 @@
-from .chunk_embedder import HuggingFaceTextEmbedder
-from .doc_chunker import DoclingHybridChunker
-from .doc_parser import DoclingParser
-from ..crud_knowledge.store import store_embedding_sync, store_document_sync
-from ..progress_service import update_progress
-from core.database.session import get_sync_db
+import logging
+import shutil
+import uuid
+from functools import lru_cache
+from pathlib import Path
 
 from fastapi import UploadFile
-from pathlib import Path
-import traceback
+
+from provider.text_embedding.embedder import get_embedder
+from .doc_chunker import DoclingHybridChunker
+from .doc_parser import DoclingParser
+from repository.store import (
+    store_document_sync,
+    store_embeddings_bulk_sync,   # the new bulk function you need to write
+)
+from ..progress_service.reporter import ProgressReporter, NullReporter
+from core.database.session import get_sync_db
+
+logger = logging.getLogger(__name__)
+
 
 class KnowledgePipeline:
     BASE_DIR = Path(__file__).resolve().parents[4]
-    def __init__(self, doc_parser = DoclingParser(), chunker = DoclingHybridChunker(), chunk_embedder = HuggingFaceTextEmbedder()):
-        self.doc_parser = doc_parser
-        self.chunker = chunker
-        self.chunk_embedder = chunk_embedder
+    UPLOAD_DIR = BASE_DIR / "core" / "database" / "upload"
 
-    def process_document(self, document, category=None, job_id=None, filename=None, progress_dict=None):
+    def __init__(self, doc_parser=None, chunker=None, chunk_embedder=None):
+        self.doc_parser = doc_parser or DoclingParser()
+        self.chunker = chunker or DoclingHybridChunker()
+        self.chunk_embedder = chunk_embedder or get_embedder()
+
+    def process_document(
+        self,
+        document,
+        category: str | None = None,
+        filename: str | None = None,
+        progress: ProgressReporter | None = None,
+    ):
+        progress = progress or NullReporter()
+        save_path = None
         try:
-            filename = filename or self._extract_filename(document)
+            filename = Path(filename or self._extract_filename(document)).name
 
-            # Step 1: Parse the document
-            if job_id:
-                update_progress(progress_dict, job_id, filename=filename, status="Parsing document...")
+            # 1. Save first, so everything downstream works from a stable file
+            save_path = self._save_document_locally(document, filename)
 
-            parsed_content = self.doc_parser.parse(document, filename)
-            markdown_content = self.doc_parser.extract_markdown(parsed_content)
-            title = self.doc_parser.extract_title(markdown_content, filename)
+            # 2. Parse
+            progress.stage("Parsing document...")
+            parsed = self.doc_parser.parse(save_path, filename)
+            markdown = self.doc_parser.extract_markdown(parsed)
+            title = self.doc_parser.extract_title(markdown, filename)
 
+            # 3. Chunk
+            progress.stage("Chunking document...")
+            chunks = self.chunker.chunk(parsed)
+            if not chunks:
+                raise ValueError("No content could be extracted from the document")
+
+            # 4. Embed in batches (no DB connection held)
+            progress.stage("Embedding chunks...", total=len(chunks))
+            vectors = self.chunk_embedder.embed_many(chunks)
+
+            # 5. Short transaction: document + all chunks, atomically
+            progress.stage("Saving...")
+            rel_path = save_path.relative_to(self.BASE_DIR).as_posix()
             with get_sync_db() as session:
-                # Store document metadata in the database
-                source_url = self._save_document_locally(document, filename=filename)
-                document_result = store_document_sync(session, title=title, source_url=source_url.relative_to(self.BASE_DIR).as_posix(), category=category)
+                doc = store_document_sync(
+                    session, title=title, source_url=rel_path, category=category
+                )
+                store_embeddings_bulk_sync(
+                    session,
+                    document_id=doc.id,
+                    chunks=[
+                        {"chunk_index": i, "content": c, "embedding": v}
+                        for i, (c, v) in enumerate(zip(chunks, vectors))
+                    ]
+                )
 
-                # Step 2: Chunk the parsed content
-                if job_id:
-                    update_progress(progress_dict, job_id, status="Chunking document...")
+            progress.succeed()
+            return {
+                "message": "Document processed and stored successfully",
+                "document_id": doc.id,
+                "title": title,
+                "source_url": rel_path,
+                "num_chunks": len(chunks),
+            }
 
-                chunks = self.chunker.chunk(parsed_content)
-
-                # Step 3: Embed the chunks
-                if job_id:
-                    update_progress(progress_dict, job_id, status="Embedding chunks...", total_chunks=len(chunks))
-
-                for i, chunk in enumerate(chunks):
-                    if job_id:
-                        update_progress(progress_dict, job_id, processed_chunks=i+1)
-
-                    embedded_chunk = self.chunk_embedder.embed(chunk)
-
-                    # Step 4: Store the embedded chunks in the database
-                    store_embedding_sync(session, document_id=document_result.id, content=chunk, embedding=embedded_chunk, chunk_index=i)
-
-                if job_id:
-                    update_progress(progress_dict, job_id, status="Document processed successfully")  
-
-                return {
-                    "message": "Document processed and stored successfully",
-                    "document_id": document_result.id,
-                    "title": title,
-                    "source_url": source_url.relative_to(self.BASE_DIR).as_posix(),
-                    "num_chunks": len(chunks)
-                }
         except Exception as e:
-            traceback.print_exc()  # ✅ print full traceback
-            raise e
-    
+            logger.exception("Knowledge pipeline failed for %s", filename)
+            progress.fail(e)
+            if save_path:
+                save_path.unlink(missing_ok=True)
+            raise
+
     def _extract_filename(self, file):
         if isinstance(file, UploadFile):
             return file.filename
-        else:
+        if isinstance(file, (str, Path)):
             return Path(file).name
-        
-    def _save_document_locally(self, document, filename=None, save_dir=BASE_DIR / "core" / "database" / "upload"):
-        save_dir.mkdir(parents=False, exist_ok=True)
+        raise ValueError("filename is required when passing raw bytes")
 
-        filename = filename or self._extract_filename(document)
-        save_path = Path(save_dir) / filename
+    def _save_document_locally(self, document, filename):
+        self.UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+        save_path = self.UPLOAD_DIR / f"{uuid.uuid4().hex}_{filename}"
 
         if isinstance(document, UploadFile):
-            with open(save_path, 'wb') as f:
-                f.write(document.file.read())
-
-        elif isinstance(document, bytes):  # ✅ handle bytes from await file.read()
-            with open(save_path, 'wb') as f:
-                f.write(document)
-
+            document.file.seek(0)
+            with open(save_path, "wb") as dst:
+                shutil.copyfileobj(document.file, dst)
+        elif isinstance(document, bytes):
+            save_path.write_bytes(document)
         else:
-            with open(document, 'rb') as src, open(save_path, 'wb') as dst:
-                while chunk := src.read(1024 * 1024):  # 1MB
-                    dst.write(chunk)
-
+            shutil.copyfile(document, save_path)
         return save_path
-    
-knowledge_pipeline = KnowledgePipeline()
+
+
+@lru_cache(maxsize=1)
+def get_knowledge_pipeline() -> KnowledgePipeline:
+    return KnowledgePipeline()

@@ -5,7 +5,7 @@ from psycopg_pool import AsyncConnectionPool
 import psycopg
 from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
 from psycopg.rows import dict_row
-
+import asyncio
 
 from app.agent.routers import api_router as llm_router
 from app.knowledge.routers import api_router as knowledge_router
@@ -14,34 +14,47 @@ from app.user.routers import api_router as auth_router
 from app.agent.service.agent_tools.rag_tools import rag_tools
 from core.config import settings
 from app.agent.service.graph.agent_graph import AgenticRAGGraph
-from app.provider.factory import get_llm
+from provider.llm.factory import get_llm
+from app.knowledge.service.add_knowledge.pipeline import get_knowledge_pipeline
+from app.knowledge.service.progress_service.job_runner import IngestionJobRunner
+from app.knowledge.service.progress_service.store import get_progress_store
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     db_uri = settings.DATABASE_SYNC_URL  # plain postgresql://...
-    conn_kwargs = {
-        "autocommit": True,
-        "row_factory": dict_row,
-        "options": "-c search_path=langgraph",
-    }
 
-    # one-off: schema + tables
-    async with await psycopg.AsyncConnection.connect(db_uri, **conn_kwargs | {"options": None}) as conn:
+    # one-off: schema
+    async with await psycopg.AsyncConnection.connect(db_uri, autocommit=True) as conn:
         await conn.execute("CREATE SCHEMA IF NOT EXISTS langgraph")
 
-    async with AsyncConnectionPool(
-        conninfo=db_uri,
-        max_size=5,
-        kwargs=conn_kwargs,
-        open=False,
-    ) as pool:
-        checkpointer = AsyncPostgresSaver(pool)
-        await checkpointer.setup()
+    pipeline = await asyncio.to_thread(get_knowledge_pipeline)   # preload models
+    runner = IngestionJobRunner(
+        pipeline=pipeline,
+        store=get_progress_store(),
+        max_workers=1,
+    )
+    app.state.job_runner = runner
 
-        app.state.chat_graph = AgenticRAGGraph(
-            llm=get_llm(), tools=[rag_tools], checkpointer=checkpointer
-        )
-        yield
+    try:
+        async with AsyncConnectionPool(
+            conninfo=db_uri,
+            max_size=5,
+            kwargs={
+                "autocommit": True,
+                "row_factory": dict_row,
+                "options": "-c search_path=langgraph",
+            },
+            open=False,
+        ) as pool:
+            checkpointer = AsyncPostgresSaver(pool)
+            await checkpointer.setup()
+
+            app.state.chat_graph = AgenticRAGGraph(
+                llm=get_llm(), tools=[rag_tools], checkpointer=checkpointer
+            )
+            yield
+    finally:
+        runner.shutdown()
 
 app = FastAPI(lifespan=lifespan)
 

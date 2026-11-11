@@ -1,5 +1,5 @@
 from typing import Literal
-from app.provider.llm import get_openai_llm, get_openrouter_llm
+from provider.llm.llm import get_openai_llm, get_openrouter_llm
 from core.config import settings
 from langchain_core.language_models import BaseChatModel
 
