@@ -1,0 +1,31 @@
+[project]
+name = "agentic-ai"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "alembic>=1.20.1",
+    "asyncpg>=0.32.0",
+    "bcrypt==4.0.1",
+    "docling>=2.150.0",
+    "fastapi==0.115.12",
+    "fastapi-filter==2.0.1",
+    "langchain>=1.4.10",
+    "langchain-community>=0.4.2",
+    "langchain-openai>=1.7.4",
+    "langgraph>=1.2.20",
+    "langgraph-checkpoint-postgres>=3.2.0",
+    "openai>=3.49.0",
+    "passlib[bcrypt]==1.7.4",
+    "pgvector>=0.5.1",
+    "psycopg2-binary>=2.9.13",
+    "pydantic==2.13.3",
+    "pydantic-settings>=2.16.2",
+    "python-jose>=3.5.0",
+    "python-multipart>=0.0.33",
+    "sentence-transformers>=6.2.0",
+    "sqlalchemy>=2.1.8",
+    "starlette==0.46.2",
+    "uvicorn>=0.54.0",
+]
